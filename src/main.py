@@ -1,5 +1,13 @@
 """FastAPI server for Indonesian Query Classification."""
 
+import os
+# Enforce offline mode by default for Hugging Face/Transformers to avoid any network calls.
+# These can be overridden via environment if needed.
+os.environ.setdefault("HF_HUB_OFFLINE", "1")
+os.environ.setdefault("TRANSFORMERS_OFFLINE", "1")
+# Optional local cache directory (kept relative to project root by default)
+os.environ.setdefault("HF_HOME", os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".hf_cache")))
+
 from fastapi import FastAPI, HTTPException  # type: ignore
 from pydantic import BaseModel  # type: ignore
 from typing import List, Optional, Dict, Any
@@ -53,6 +61,8 @@ class StatisticsResponse(BaseModel):
     average_confidence: float
     verified_training_samples: int
     model_needs_retraining: bool
+    # Silence "model_" protected namespace warning from Pydantic for field names.
+    model_config = {"protected_namespaces": ()}
 
 @app.get("/health", response_model=HealthResponse)
 async def health_check():

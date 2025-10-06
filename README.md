@@ -57,12 +57,25 @@ docker exec -d indonesian-classifier python src/main.py
 ```bash
 # Health check
 
-### Option 3: Local Setup (No Docker) — Python 3.11 + venv
+### Option 3: Local Setup (No Docker) — Python 3.11 + venv (Windows)
 Use Python 3.11 and a virtual environment to avoid dependency conflicts.
 
 ```powershell
-# 1) Verify Python 3.11 is available
-curl http://localhost:8080/health
+# 1) Create venv and install deps
+py -3.11 -m venv .venv
+.\.venv\Scripts\python -m pip install --upgrade pip
+.\.venv\Scripts\python -m pip install -r requirements-light.txt
+
+# 2) Enforce offline mode for HF/Transformers (optional but recommended)
+$env:HF_HUB_OFFLINE="1"
+$env:TRANSFORMERS_OFFLINE="1"
+
+# 3) Start API
+$env:PYTHONPATH = "$PWD\\src"
+.\.venv\Scripts\python -m uvicorn main:app --host 127.0.0.1 --port 8080
+
+# 4) Health check
+curl http://127.0.0.1:8080/health
 
 # Classify a query
 curl -X POST "http://localhost:8080/classify" \
@@ -81,6 +94,47 @@ curl http://localhost:8080/examples
 
 ### 4. Interactive API Documentation
 Open browser: http://localhost:8080/docs
+
+### Option 4: Local Setup (Linux) — Python 3.11 + venv (Offline-first)
+
+```bash
+# 1) Create venv and install deps
+python3.11 -m venv .venv
+./.venv/bin/python -m pip install --upgrade pip
+./.venv/bin/python -m pip install -r requirements-light.txt
+
+# 2) Enforce offline mode (recommended for air-gapped servers)
+export HF_HUB_OFFLINE=1
+export TRANSFORMERS_OFFLINE=1
+
+# 3) Start API (script will set PYTHONPATH and offline vars too)
+chmod +x scripts/run_offline.sh
+./scripts/run_offline.sh
+
+# 4) Health check
+curl http://127.0.0.1:8080/health
+```
+
+Optional: systemd service (Linux)
+```ini
+[Unit]
+Description=Indonesian Query Classifier API (Offline)
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/lightweight-classifier
+Environment=HF_HUB_OFFLINE=1
+Environment=TRANSFORMERS_OFFLINE=1
+Environment=PYTHONPATH=/opt/lightweight-classifier/src
+ExecStart=/opt/lightweight-classifier/.venv/bin/python -m uvicorn main:app --host 0.0.0.0 --port 8080
+Restart=always
+User=www-data
+Group=www-data
+
+[Install]
+WantedBy=multi-user.target
+```
 
 ## 📁 Project Structure
 
@@ -153,14 +207,17 @@ The classifier includes sample test data:
 - "urutkan berdasarkan umur" → SORT operation
 - "kelompokkan berdasarkan departemen" → GROUP operation
 
-## � Offline Model (No Runtime Downloads)
+## 📴 Offline Model (No Runtime Downloads)
 
 To avoid downloading from Hugging Face at runtime, download the model locally and commit it via Git LFS:
 
 ```powershell
 # Ensure Python 3.11 venv is active (see Local Setup section)
 
-# 1) Download tokenizer + base model into ./models/distilbert-base-multilingual-cased
+# 1) (Optional) Ensure huggingface_hub is installed in your venv
+pip install huggingface_hub
+
+# 2) Download tokenizer + base model into ./models/distilbert-base-multilingual-cased
 py -3.11 scripts\download_model.py --model distilbert-base-multilingual-cased --out-dir models\distilbert-base-multilingual-cased
 
 # 2) Set up Git LFS (one-time per machine)
@@ -180,6 +237,8 @@ git push
 ```
 
 The classifier will look for a local fine-tuned model at `./models/indonesian-query-classifier` first; if not found, it will load the locally downloaded base model from `./models/distilbert-base-multilingual-cased`. If neither is present, it falls back to rule-based mode without network access.
+
+To harden offline behavior, the app sets `HF_HUB_OFFLINE=1` and `TRANSFORMERS_OFFLINE=1` at startup. You can override these via environment variables if needed.
 
 ## �🔄 API Endpoints
 

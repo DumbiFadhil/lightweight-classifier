@@ -119,7 +119,7 @@ class IndonesianQueryClassifier:
                     outputs.logits, dim=-1)
 
             confidence, predicted_id = torch.max(predictions, dim=-1)
-            operation_type = self.query_categories[predicted_id.item()]
+            operation_type = self.query_categories[predicted_id.item()] # type: ignore
             return operation_type, float(confidence.item())
 
         return "FILTER", 0.5

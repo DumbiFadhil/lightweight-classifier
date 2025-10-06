@@ -1,6 +1,7 @@
 """Query logging and training data collection."""
 
 import json
+import os
 import sqlite3
 import pandas as pd  # type: ignore
 from datetime import datetime
@@ -11,9 +12,11 @@ from pathlib import Path
 logger = logging.getLogger(__name__)
 
 class QueryLogger:
-    def __init__(self, db_path: str = "/app/data/query_logs.db"):
+    def __init__(self, db_path: Optional[str] = None):
         """Initialize SQLite DB and tables if missing."""
-        self.db_path = db_path
+        # Prefer env override; default to project-relative path for local runs
+        resolved = db_path or os.getenv("QUERY_LOG_DB_PATH", "data/query_logs.db")
+        self.db_path = resolved
         self.init_database()
     
     def init_database(self):
