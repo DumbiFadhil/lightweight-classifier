@@ -153,7 +153,35 @@ The classifier includes sample test data:
 - "urutkan berdasarkan umur" → SORT operation
 - "kelompokkan berdasarkan departemen" → GROUP operation
 
-## 🔄 API Endpoints
+## � Offline Model (No Runtime Downloads)
+
+To avoid downloading from Hugging Face at runtime, download the model locally and commit it via Git LFS:
+
+```powershell
+# Ensure Python 3.11 venv is active (see Local Setup section)
+
+# 1) Download tokenizer + base model into ./models/distilbert-base-multilingual-cased
+py -3.11 scripts\download_model.py --model distilbert-base-multilingual-cased --out-dir models\distilbert-base-multilingual-cased
+
+# 2) Set up Git LFS (one-time per machine)
+git lfs install
+
+# 3) Track common model files
+git lfs track "models/*/*.bin"
+git lfs track "models/*/pytorch_model*.bin"
+git lfs track "models/*/model.safetensors"
+git lfs track "models/*/rust_model.ot"
+git add .gitattributes
+
+# 4) Add and commit the model directory
+git add models\distilbert-base-multilingual-cased
+git commit -m "chore(models): vendor distilbert-base-multilingual-cased for offline use"
+git push
+```
+
+The classifier will look for a local fine-tuned model at `./models/indonesian-query-classifier` first; if not found, it will load the locally downloaded base model from `./models/distilbert-base-multilingual-cased`. If neither is present, it falls back to rule-based mode without network access.
+
+## �🔄 API Endpoints
 
 | Endpoint | Method | Description |
 |----------|--------|-------------|

@@ -50,13 +50,23 @@ class IndonesianQueryClassifier:
         self.is_finetuned = False
         self.model_name = model_name
         try:
-            local_path = "./models/indonesian-query-classifier"
-            self.tokenizer = AutoTokenizer.from_pretrained(local_path)
-            self.model = AutoModelForSequenceClassification.from_pretrained(
-                local_path, num_labels=len(self.query_categories)
-            ).to(self.device)
-            self.is_finetuned = True
-            logger.info("Loaded fine-tuned model from local path")
+            # Prefer locally vendored fine-tuned model
+            local_finetuned = "./models/indonesian-query-classifier"
+            local_base = "./models/distilbert-base-multilingual-cased"
+            try:
+                self.tokenizer = AutoTokenizer.from_pretrained(local_finetuned)
+                self.model = AutoModelForSequenceClassification.from_pretrained(
+                    local_finetuned, num_labels=len(self.query_categories)
+                ).to(self.device)
+                self.is_finetuned = True
+                logger.info("Loaded fine-tuned model from local path")
+            except Exception:
+                # Fall back to locally downloaded base model directory (no network)
+                self.tokenizer = AutoTokenizer.from_pretrained(local_base)
+                self.model = AutoModelForSequenceClassification.from_pretrained(
+                    local_base, num_labels=len(self.query_categories)
+                ).to(self.device)
+                logger.info("Loaded base model from local models folder")
         except Exception as e:
             logger.info(
                 "Fine-tuned model not found. Falling back to rule-based classification only (reason: %s)",
