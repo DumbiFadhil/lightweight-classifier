@@ -1,0 +1,37 @@
+# Python venv and caches
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.mypy_cache/
+
+# Build/packaging artifacts
+build/
+dist/
+pip-wheel-metadata/
+*.whl
+wheelhouse/
+*.egg-info/
+*.eggs/
+
+# Coverage
+.coverage
+htmlcov/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Model cache (optional local)
+.hf_cache/
+
+# Logs / data exports
+*.log
+data/*.sqlite
+
+# Node/npm (if any)
+node_modules/
