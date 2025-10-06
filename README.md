@@ -36,7 +36,7 @@ docker exec -it indonesian-classifier python src/test.py
 | "nilai minimum gaji", "gaji terendah" | MIN | `df['gaji'].min()` |
 | "jumlah total", "sum semua nilai" | SUM | `df['column'].sum()` |
 | "rata-rata umur", "rerata gaji" | MEAN | `df['umur'].mean()` |
-| "hitung jumlah baris", "berapa banyak data" | COUNT | `df.shape[0]` |
+| "Hitung jumlah baris", "berapa banyak data" | COUNT | `df.shape[0]` |
 | "cari data dimana", "filter yang memiliki" | FILTER | `df[df['column'] > value]` |
 | "urutkan berdasarkan", "sorting data" | SORT | `df.sort_values('column')` |
 | "kelompokkan berdasarkan", "group by" | GROUP | `df.groupby('column')` |
@@ -135,6 +135,42 @@ Group=www-data
 [Install]
 WantedBy=multi-user.target
 ```
+
+### Server (Linux) with Git LFS (No Hugging Face)
+
+Use Git LFS to bring the models along with the repo and run fully offline (no whitelisting Hugging Face):
+
+```bash
+# 0) Install Git LFS (one-time)
+# Ubuntu/Debian:
+#   sudo apt-get update && sudo apt-get install -y git-lfs
+#   git lfs install
+
+# 1) Clone and fetch LFS-tracked model files
+git clone -b light-only https://github.com/DumbiFadhil/lightweight-classifier.git
+cd lightweight-classifier/BERT-CPP
+git lfs pull
+
+# 2) Create venv and install dependencies (from PyPI or your internal mirror)
+python3.11 -m venv .venv
+./.venv/bin/python -m pip install --upgrade pip
+./.venv/bin/python -m pip install -r requirements-light.txt
+
+# 3) Enforce offline behavior for Transformers/HF (no network calls)
+export HF_HUB_OFFLINE=1
+export TRANSFORMERS_OFFLINE=1
+
+# 4) Start the API (script sets PYTHONPATH and prefers venv)
+chmod +x scripts/run_offline.sh
+./scripts/run_offline.sh
+```
+
+If Git LFS is blocked, copy the `models/distilbert-base-multilingual-cased/` folder from a connected machine (ZIP/USB/SCP) into the same path on the server. Ensure it contains:
+
+- `config.json`, `tokenizer.json`, `tokenizer_config.json`, `vocab.txt`
+- `pytorch_model.bin` or `model.safetensors`
+
+With `HF_HUB_OFFLINE=1` and `TRANSFORMERS_OFFLINE=1` set, the app will never attempt to download from Hugging Face.
 
 ## 📁 Project Structure
 
