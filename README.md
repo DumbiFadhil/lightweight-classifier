@@ -31,7 +31,7 @@ docker exec -it indonesian-classifier python src/test.py
 
 | Indonesian Query Examples | Operation | Generated Code |
 |----------------------------|-----------|----------------|
-| "Hitung jumlah karyawan", "group by" | COUNT | `df['nama'].count()` |
+| "Hitung jumlah karyawan", "berapa banyak data karyawan" | COUNT | `df['nama'].count()` |
 | "nilai maksimum harga", "harga tertinggi" | MAX | `df['harga'].max()` |
 | "nilai minimum gaji", "gaji terendah" | MIN | `df['gaji'].min()` |
 | "jumlah total", "sum semua nilai" | SUM | `df['column'].sum()` |
