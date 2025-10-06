@@ -29,7 +29,7 @@ class QueryRequest(BaseModel):
     user_id: Optional[str] = None
 
 class QueryResponse(BaseModel):
-    query_id: int
+    # query_id: int
     operation: str
     confidence: float
     query: str
@@ -71,15 +71,16 @@ async def classify_query(request: QueryRequest):
             request.query, 
             columns
         )
-        query_id = query_logger.log_query(
-            request.query,
-            result,
-            session_id=request.session_id,  # type: ignore
-            user_id=request.user_id  # type: ignore
-        )
+        # Uncomment to enable query logging (require sqlite setup, can take up space)
+        # query_id = query_logger.log_query(
+        #     request.query,
+        #     result,
+        #     session_id=request.session_id,  # type: ignore
+        #     user_id=request.user_id  # type: ignore
+        # )
         
         return QueryResponse(
-            query_id=query_id,
+            # query_id=query_id,
             operation=result["operation"],
             confidence=result["confidence"],
             query=result["query"],
