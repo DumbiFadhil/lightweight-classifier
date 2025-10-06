@@ -31,6 +31,7 @@ docker exec -it indonesian-classifier python src/test.py
 
 | Indonesian Query Examples | Operation | Generated Code |
 |----------------------------|-----------|----------------|
+| "Hitung jumlah karyawan", "group by" | COUNT | `df['nama'].count()` |
 | "nilai maksimum harga", "harga tertinggi" | MAX | `df['harga'].max()` |
 | "nilai minimum gaji", "gaji terendah" | MIN | `df['gaji'].min()` |
 | "jumlah total", "sum semua nilai" | SUM | `df['column'].sum()` |
@@ -55,6 +56,12 @@ docker exec -d indonesian-classifier python src/main.py
 ### 3. Use REST API
 ```bash
 # Health check
+
+### Option 3: Local Setup (No Docker) — Python 3.11 + venv
+Use Python 3.11 and a virtual environment to avoid dependency conflicts.
+
+```powershell
+# 1) Verify Python 3.11 is available
 curl http://localhost:8080/health
 
 # Classify a query
@@ -81,6 +88,11 @@ Open browser: http://localhost:8080/docs
 BERT-CPP/
 ├── Dockerfile.light              # Lightweight Docker image
 ├── docker-compose.light.yml      # Docker compose for light version
+
+Notes:
+- The commands above are for Windows PowerShell. Replace path separators accordingly on other platforms.
+- Running `python src\main.py` sets the script directory to `src/` so module imports work without extra PYTHONPATH tweaks.
+- If PyTorch installation fails due to environment constraints, ensure you’re on Python 3.11 and recent pip, then retry. CPU-only wheels are sufficient for this project.
 ├── requirements-light.txt        # Minimal Python dependencies
 ├── setup-light.ps1              # PowerShell setup script
 ├── src/
