@@ -1,0 +1,232 @@
+# Lightweight Indonesian Query Classifier
+
+A minimal, memory-efficient Docker setup using DistilBERT to classify Indonesian queries into DataFrame operations. This is a much lighter alternative to the full bert.cpp implementation, specifically designed for categorizing Indonesian database queries.
+
+## 🎯 Purpose
+
+Convert Indonesian natural language queries into pandas DataFrame operations:
+
+- **"berapa harga tertinggi?"** → `df['harga'].max()`
+- **"rata-rata gaji karyawan"** → `df['gaji'].mean()`
+- **"urutkan berdasarkan tanggal"** → `df.sort_values('tanggal')`
+- **"jumlah total penjualan"** → `df['penjualan'].sum()`
+
+## 🚀 Quick Start
+
+### Option 1: PowerShell Script (Recommended)
+```powershell
+./setup-light.ps1
+```
+
+### Option 2: Manual Docker Commands
+```bash
+# Build and start
+docker-compose -f docker-compose.light.yml up -d
+
+# Test the classifier
+docker exec -it indonesian-classifier python src/test.py
+```
+
+## 📊 Supported Operations
+
+| Indonesian Query Examples | Operation | Generated Code |
+|----------------------------|-----------|----------------|
+| "nilai maksimum harga", "harga tertinggi" | MAX | `df['harga'].max()` |
+| "nilai minimum gaji", "gaji terendah" | MIN | `df['gaji'].min()` |
+| "jumlah total", "sum semua nilai" | SUM | `df['column'].sum()` |
+| "rata-rata umur", "rerata gaji" | MEAN | `df['umur'].mean()` |
+| "hitung jumlah baris", "berapa banyak data" | COUNT | `df.shape[0]` |
+| "cari data dimana", "filter yang memiliki" | FILTER | `df[df['column'] > value]` |
+| "urutkan berdasarkan", "sorting data" | SORT | `df.sort_values('column')` |
+| "kelompokkan berdasarkan", "group by" | GROUP | `df.groupby('column')` |
+
+## 🔧 Usage Examples
+
+### 1. Test the Classifier (Offline)
+```bash
+docker exec -it indonesian-classifier python src/test.py
+```
+
+### 2. Start API Server
+```bash
+docker exec -d indonesian-classifier python src/main.py
+```
+
+### 3. Use REST API
+```bash
+# Health check
+curl http://localhost:8080/health
+
+# Classify a query
+curl -X POST "http://localhost:8080/classify" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "query": "berapa harga tertinggi dari data ini?",
+    "columns": ["nama", "harga", "kategori"]
+  }'
+
+# Get supported operations
+curl http://localhost:8080/operations
+
+# Get example queries
+curl http://localhost:8080/examples
+```
+
+### 4. Interactive API Documentation
+Open browser: http://localhost:8080/docs
+
+## 📁 Project Structure
+
+```
+BERT-CPP/
+├── Dockerfile.light              # Lightweight Docker image
+├── docker-compose.light.yml      # Docker compose for light version
+├── requirements-light.txt        # Minimal Python dependencies
+├── setup-light.ps1              # PowerShell setup script
+├── src/
+│   ├── classifier.py             # Main classifier logic
+│   ├── main.py                   # FastAPI server
+│   └── test.py                   # Testing script
+├── data/
+│   └── training_data.csv         # Sample training data
+├── models/                       # Model storage (auto-created)
+└── README-light.md              # This file
+```
+
+## 🧠 How It Works
+
+1. **DistilBERT Model**: Uses `distilbert-base-multilingual-cased` for text classification
+2. **8 Categories**: Classifies queries into MAX, MIN, SUM, MEAN, COUNT, FILTER, SORT, GROUP
+3. **Column Detection**: Simple rule-based column name detection from query text
+4. **Code Generation**: Template-based pandas code generation
+
+## 💾 Memory Usage
+
+- **Container Size**: ~800MB (vs 2GB+ for full bert.cpp)
+- **Runtime Memory**: ~300-500MB
+- **Model Size**: ~135MB (DistilBERT multilingual)
+- **Startup Time**: ~10-15 seconds
+
+## 🔧 Configuration
+
+### Environment Variables
+- `PYTHONPATH=/app/src`
+- Models stored in `/app/models`
+- Data files in `/app/data`
+
+### Ports
+- **8080**: FastAPI server (mapped to host)
+
+### Volumes
+- `./data:/app/data` - Training data and samples
+- `./models:/app/models` - Model storage
+
+## 🧪 Testing
+
+The classifier includes sample test data:
+
+```python
+# Sample DataFrame
+{
+    "nama": ["Budi", "Sari", "Andi", "Dewi", "Rudi"],
+    "umur": [25, 30, 35, 28, 32],
+    "gaji": [5000000, 7500000, 8000000, 6000000, 7000000],
+    "departemen": ["IT", "HR", "IT", "Finance", "IT"]
+}
+```
+
+### Test Queries
+- "berapa gaji tertinggi?" → MAX operation
+- "rata-rata umur karyawan" → MEAN operation  
+- "urutkan berdasarkan umur" → SORT operation
+- "kelompokkan berdasarkan departemen" → GROUP operation
+
+## 🔄 API Endpoints
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/` | GET | API information |
+| `/health` | GET | Health check |
+| `/classify` | POST | Classify query and generate code |
+| `/operations` | GET | List supported operations |
+| `/examples` | GET | Get example queries |
+| `/docs` | GET | Interactive API documentation |
+
+## 📝 Example API Response
+
+```json
+{
+  "operation": "MAX",
+  "confidence": 0.892,
+  "query": "berapa harga tertinggi?",
+  "generated_code": "df['harga'].max()",
+  "columns_used": ["nama", "harga", "kategori"]
+}
+```
+
+## 🛠 Development
+
+### Adding New Query Types
+1. Update `query_categories` in `classifier.py`
+2. Add training samples in `data/training_data.csv`
+3. Update code templates in `_generate_pandas_code()`
+
+### Improving Column Detection
+Modify `_detect_column()` method to include:
+- Named Entity Recognition (NER)
+- Fuzzy string matching
+- Domain-specific mappings
+
+### Fine-tuning the Model
+1. Prepare labeled training data
+2. Use the training samples in `TrainingData.generate_sample_data()`
+3. Train with standard transformers training loop
+
+## 🚫 Limitations
+
+- **Basic Column Detection**: Simple string matching for column names
+- **Template-based Code**: Uses predefined pandas code templates
+- **No Batching**: Processes one query at a time
+- **Indonesian Focus**: Optimized for Indonesian queries only
+- **Simple Operations**: Limited to basic DataFrame operations
+
+## 🔄 Improvements Roadmap
+
+1. **Better NLP**: Add NER for better column detection
+2. **More Operations**: Support for JOIN, advanced aggregations
+3. **Query Validation**: Validate generated pandas code
+4. **Caching**: Cache model predictions
+5. **Training Pipeline**: Automated model fine-tuning
+
+## 🐛 Troubleshooting
+
+1. **Container won't start**: Check Docker memory allocation (needs ~1GB)
+2. **Model download fails**: Ensure internet connection for first run
+3. **Port conflict**: Change port 8080 in docker-compose.light.yml
+4. **Memory issues**: Reduce batch size or use smaller model
+
+## 🆚 Comparison with Full BERT.CPP
+
+| Feature | Lightweight | Full BERT.CPP |
+|---------|-------------|---------------|
+| **Container Size** | ~800MB | ~2GB+ |
+| **Memory Usage** | ~300-500MB | ~1-2GB |
+| **Startup Time** | ~15 seconds | ~30-60 seconds |
+| **Use Case** | Indonesian query classification | General sentence embeddings |
+| **Model** | DistilBERT multilingual | Full BERT with quantization |
+| **Languages** | Indonesian + multilingual | Universal |
+
+## 📜 License
+
+MIT License - Feel free to use and modify for your projects.
+
+## 🤝 Contributing
+
+1. Add more Indonesian training samples
+2. Improve column detection algorithms
+3. Add support for more DataFrame operations
+4. Optimize memory usage further
+
+---
+
+**Note**: This is a lightweight, specialized version focused on Indonesian query classification. For general-purpose sentence embeddings, use the full bert.cpp implementation.

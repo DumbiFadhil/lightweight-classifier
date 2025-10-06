@@ -1,0 +1,74 @@
+# Indonesian query training data
+# Format: query_text,operation_id,operation_name
+
+# MAX operations (0)
+nilai maksimum harga,0,MAX
+berapa harga tertinggi,0,MAX
+cari nilai terbesar dari gaji,0,MAX
+maksimum umur karyawan,0,MAX
+nilai paling tinggi,0,MAX
+yang paling besar nilainya,0,MAX
+angka tertinggi dari data,0,MAX
+
+# MIN operations (1)
+nilai minimum harga,1,MIN
+berapa harga terendah,1,MIN
+cari nilai terkecil dari gaji,1,MIN
+minimum umur karyawan,1,MIN
+nilai paling rendah,1,MIN
+yang paling kecil nilainya,1,MIN
+angka terendah dari data,1,MIN
+
+# SUM operations (2)
+jumlah total harga,2,SUM
+total penjumlahan gaji,2,SUM
+berapa total keseluruhan,2,SUM
+sum dari semua nilai,2,SUM
+tambahkan semua nilai,2,SUM
+akumulasi seluruh data,2,SUM
+penjumlahan semua angka,2,SUM
+
+# MEAN operations (3)
+rata-rata harga,3,MEAN
+rerata gaji karyawan,3,MEAN
+berapa rata-rata umur,3,MEAN
+nilai tengah dari data,3,MEAN
+average dari semua nilai,3,MEAN
+mean seluruh data,3,MEAN
+nilai rata-rata keseluruhan,3,MEAN
+
+# COUNT operations (4)
+hitung jumlah baris,4,COUNT
+berapa banyak data,4,COUNT
+count total record,4,COUNT
+jumlah karyawan,4,COUNT
+berapa banyak entri,4,COUNT
+hitung semua data,4,COUNT
+total jumlah baris data,4,COUNT
+
+# FILTER operations (5)
+cari data dimana harga lebih dari 100,5,FILTER
+filter karyawan yang gajinya tinggi,5,FILTER
+tampilkan data yang memiliki nilai,5,FILTER
+where kondisi tertentu,5,FILTER
+ambil data dengan syarat,5,FILTER
+saring data berdasarkan kriteria,5,FILTER
+pilih data yang sesuai kondisi,5,FILTER
+
+# SORT operations (6)
+urutkan berdasarkan harga,6,SORT
+sorting data dari terkecil,6,SORT
+arrange menurut nama,6,SORT
+order by tanggal,6,SORT
+susun data berdasarkan urutan,6,SORT
+sort ascending atau descending,6,SORT
+atur urutan data,6,SORT
+
+# GROUP operations (7)
+kelompokkan berdasarkan kategori,7,GROUP
+group by departemen,7,GROUP
+grup data menurut jenis,7,GROUP
+aggregate per grup,7,GROUP
+kumpulkan data berdasarkan kelompok,7,GROUP
+klasifikasi data per kategori,7,GROUP
+pengelompokan data berdasarkan atribut,7,GROUP

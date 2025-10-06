@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Indonesian Query Classifier - Learning Dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .query-form {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        input, textarea, button, select {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        button {
+            background-color: #667eea;
+            color: white;
+            cursor: pointer;
+            border: none;
+        }
+        button:hover {
+            background-color: #5a6fd8;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+        }
+        .stat-item {
+            text-align: center;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            color: #667eea;
+        }
+        .result {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 5px;
+            background-color: #e7f3ff;
+            border-left: 4px solid #007bff;
+        }
+        .feedback-section {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #fff3cd;
+            border-radius: 5px;
+            border-left: 4px solid #ffc107;
+        }
+        .operation-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            background-color: #667eea;
+            color: white;
+            border-radius: 12px;
+            font-size: 0.8em;
+            margin-right: 5px;
+        }
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🇮🇩 Indonesian Query Classifier</h1>
+        <p>AI-powered DataFrame query generator that learns from your feedback</p>
+    </div>
+
+    <div class="grid">
+        <div class="card">
+            <h2>🔍 Test Query Classification</h2>
+            <div class="query-form">
+                <textarea id="queryInput" placeholder="Enter Indonesian query (e.g., 'berapa harga tertinggi?')" rows="3"></textarea>
+                <input type="text" id="columnsInput" placeholder="Column names (comma-separated)" value="nama,harga,kategori,tanggal">
+                <button onclick="classifyQuery()">Classify Query</button>
+            </div>
+            
+            <div id="queryResult" style="display: none;"></div>
+        </div>
+
+        <div class="card">
+            <h2>📊 System Statistics</h2>
+            <div id="statsContainer">
+                <button onclick="loadStats()">Load Statistics</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>💡 Example Queries</h2>
+        <div id="examplesContainer">
+            <button onclick="loadExamples()">Load Examples</button>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>🎯 How It Works</h2>
+        <ol>
+            <li><strong>Query Classification:</strong> Enter Indonesian queries to get DataFrame operations</li>
+            <li><strong>Feedback Collection:</strong> Rate the accuracy of predictions</li>
+            <li><strong>Continuous Learning:</strong> System improves with more feedback</li>
+            <li><strong>Model Retraining:</strong> Automatic improvements when enough data is collected</li>
+        </ol>
+        
+        <h3>Supported Operations:</h3>
+        <div style="margin-top: 10px;">
+            <span class="operation-badge">MAX</span> Find maximum values
+            <span class="operation-badge">MIN</span> Find minimum values
+            <span class="operation-badge">SUM</span> Calculate totals
+            <span class="operation-badge">MEAN</span> Calculate averages
+            <span class="operation-badge">COUNT</span> Count rows/values
+            <span class="operation-badge">FILTER</span> Filter data
+            <span class="operation-badge">SORT</span> Sort data
+            <span class="operation-badge">GROUP</span> Group data
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8080';
+        let currentQueryId = null;
+
+        async function classifyQuery() {
+            const query = document.getElementById('queryInput').value.trim();
+            const columns = document.getElementById('columnsInput').value.split(',').map(c => c.trim());
+            
+            if (!query) {
+                alert('Please enter a query');
+                return;
+            }
+
+            const button = event.target;
+            button.textContent = 'Classifying...';
+            button.disabled = true;
+
+            try {
+                const response = await fetch(`${API_BASE}/classify`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        query: query,
+                        columns: columns,
+                        session_id: `web_session_${Date.now()}`,
+                        user_id: 'web_user'
+                    })
+                });
+
+                const result = await response.json();
+                displayQueryResult(result);
+                currentQueryId = result.query_id;
+
+            } catch (error) {
+                document.getElementById('queryResult').innerHTML = `
+                    <div style="color: red;">Error: ${error.message}</div>
+                `;
+            } finally {
+                button.textContent = 'Classify Query';
+                button.disabled = false;
+            }
+        }
+
+        function displayQueryResult(result) {
+            const resultDiv = document.getElementById('queryResult');
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = `
+                <div class="result">
+                    <h3>Classification Result</h3>
+                    <p><strong>Query:</strong> "${result.query}"</p>
+                    <p><strong>Operation:</strong> <span class="operation-badge">${result.operation}</span></p>
+                    <p><strong>Confidence:</strong> ${(result.confidence * 100).toFixed(1)}%</p>
+                    <p><strong>Generated Code:</strong></p>
+                    <code style="background: #f8f9fa; padding: 10px; display: block; border-radius: 4px;">
+                        ${result.generated_code}
+                    </code>
+                </div>
+                
+                <div class="feedback-section">
+                    <h4>Was this classification correct?</h4>
+                    <button onclick="submitFeedback('correct')" style="background: #28a745; margin-right: 10px;">✓ Correct</button>
+                    <button onclick="submitFeedback('incorrect')" style="background: #dc3545;">✗ Incorrect</button>
+                    <select id="correctOperation" style="margin-left: 10px;">
+                        <option value="">Select correct operation</option>
+                        <option value="MAX">MAX</option>
+                        <option value="MIN">MIN</option>
+                        <option value="SUM">SUM</option>
+                        <option value="MEAN">MEAN</option>
+                        <option value="COUNT">COUNT</option>
+                        <option value="FILTER">FILTER</option>
+                        <option value="SORT">SORT</option>
+                        <option value="GROUP">GROUP</option>
+                    </select>
+                </div>
+            `;
+        }
+
+        async function submitFeedback(feedback) {
+            if (!currentQueryId) {
+                alert('No query to provide feedback for');
+                return;
+            }
+
+            const correctOperation = document.getElementById('correctOperation').value;
+
+            try {
+                const response = await fetch(`${API_BASE}/feedback`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        query_id: currentQueryId,
+                        feedback: feedback,
+                        correct_operation: feedback === 'incorrect' ? correctOperation : null
+                    })
+                });
+
+                const result = await response.json();
+                
+                document.querySelector('.feedback-section').innerHTML = `
+                    <div style="color: green;">
+                        ✓ Feedback submitted! ${result.message}
+                        ${result.suggestion ? '<br><em>' + result.suggestion + '</em>' : ''}
+                    </div>
+                `;
+
+                // Reload stats to show updated numbers
+                loadStats();
+
+            } catch (error) {
+                alert(`Error submitting feedback: ${error.message}`);
+            }
+        }
+
+        async function loadStats() {
+            const container = document.getElementById('statsContainer');
+            container.innerHTML = '<div class="loading">Loading statistics...</div>';
+
+            try {
+                const response = await fetch(`${API_BASE}/statistics`);
+                const stats = await response.json();
+
+                container.innerHTML = `
+                    <div class="stats">
+                        <div class="stat-item">
+                            <div class="stat-number">${stats.total_queries}</div>
+                            <div>Total Queries</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">${stats.queries_with_feedback}</div>
+                            <div>With Feedback</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">${(stats.average_confidence * 100).toFixed(1)}%</div>
+                            <div>Avg Confidence</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">${stats.verified_training_samples}</div>
+                            <div>Training Samples</div>
+                        </div>
+                    </div>
+                    
+                    <h4 style="margin-top: 20px;">Queries by Operation:</h4>
+                    <div style="margin-top: 10px;">
+                        ${Object.entries(stats.queries_by_operation).map(([op, count]) => 
+                            `<span class="operation-badge">${op}: ${count}</span>`
+                        ).join(' ')}
+                    </div>
+                    
+                    ${stats.model_needs_retraining ? 
+                        '<div style="margin-top: 15px; padding: 10px; background: #d4edda; border-radius: 5px; color: #155724;">🚀 Model ready for retraining!</div>' : 
+                        '<div style="margin-top: 15px; padding: 10px; background: #fff3cd; border-radius: 5px; color: #856404;">⏳ Collecting more data for retraining...</div>'
+                    }
+                `;
+
+            } catch (error) {
+                container.innerHTML = `<div style="color: red;">Error loading statistics</div>`;
+            }
+        }
+
+        async function loadExamples() {
+            const container = document.getElementById('examplesContainer');
+            container.innerHTML = '<div class="loading">Loading examples...</div>';
+
+            try {
+                const response = await fetch(`${API_BASE}/examples`);
+                const data = await response.json();
+
+                let html = '';
+                Object.entries(data.examples).forEach(([operation, queries]) => {
+                    html += `
+                        <h4><span class="operation-badge">${operation}</span></h4>
+                        <ul>
+                            ${queries.map(query => 
+                                `<li><a href="#" onclick="document.getElementById('queryInput').value='${query}'; return false;">${query}</a></li>`
+                            ).join('')}
+                        </ul>
+                    `;
+                });
+
+                container.innerHTML = html;
+
+            } catch (error) {
+                container.innerHTML = `<div style="color: red;">Error loading examples</div>`;
+            }
+        }
+
+        // Load initial stats when page loads
+        window.onload = function() {
+            loadStats();
+        };
+    </script>
+</body>
+</html>
