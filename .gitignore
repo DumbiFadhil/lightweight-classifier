@@ -1,5 +1,8 @@
 # Python venv and caches
 .venv/
+venv/
+env/
+.env/
 __pycache__/
 *.pyc
 .pytest_cache/
@@ -32,6 +35,7 @@ Thumbs.db
 # Logs / data exports
 *.log
 data/*.sqlite
+data/*.db
 
 # Node/npm (if any)
 node_modules/

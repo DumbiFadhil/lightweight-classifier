@@ -1,4 +1,4 @@
-"""Indonesian Query Classifier with rule-based intents and optional local transformer."""
+"""Indonesian query classifier with rule-based intents and optional local transformer."""
 
 import torch  # pyright: ignore[reportMissingImports]
 import pandas as pd  # pyright: ignore[reportMissingModuleSource]
@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 class IndonesianQueryClassifier:
     def __init__(self, model_name: str = "distilbert-base-multilingual-cased"):
-        """Prefer fast, deterministic rules; optionally use a local fine-tuned model."""
+        """Use deterministic rules; optionally load a local fine-tuned model."""
         self.device = torch.device(
             "cuda" if torch.cuda.is_available() else "cpu")
         logger.info(f"Using device: {self.device}")
@@ -50,7 +50,7 @@ class IndonesianQueryClassifier:
         self.is_finetuned = False
         self.model_name = model_name
         try:
-            # Prefer locally vendored fine-tuned model
+            # Try local fine-tuned model first
             local_finetuned = "./models/indonesian-query-classifier"
             local_base = "./models/distilbert-base-multilingual-cased"
             try:
@@ -61,7 +61,7 @@ class IndonesianQueryClassifier:
                 self.is_finetuned = True
                 logger.info("Loaded fine-tuned model from local path")
             except Exception:
-                # Fall back to locally downloaded base model directory (no network)
+                # Fall back to local base model directory (no network)
                 self.tokenizer = AutoTokenizer.from_pretrained(local_base)
                 self.model = AutoModelForSequenceClassification.from_pretrained(
                     local_base, num_labels=len(self.query_categories)
@@ -69,7 +69,7 @@ class IndonesianQueryClassifier:
                 logger.info("Loaded base model from local models folder")
         except Exception as e:
             logger.info(
-                "Fine-tuned model not found. Falling back to rule-based classification only (reason: %s)",
+                "Fine-tuned model not found. Falling back to rule-based only (reason: %s)",
                 str(e)[:120],
             )
 
@@ -78,7 +78,7 @@ class IndonesianQueryClassifier:
         return self.model
 
     def _rule_based_classify(self, query: str) -> Tuple[str, float]:
-        """Deterministic keyword classification. Returns (operation, confidence)."""
+        """Keyword classification. Returns (operation, confidence)."""
         q = query.lower()
 
         priority = ["MAX", "MIN", "MEAN", "SUM",
@@ -193,7 +193,7 @@ class IndonesianQueryClassifier:
         return "# Unknown operation"
 
     def _detect_column(self, query: str, columns: List[str]) -> str:
-        """Simple column detection by keywords and mappings."""
+        """Column detection by keywords and mappings."""
         query_lower = query.lower()
 
         for col in columns:
@@ -219,7 +219,7 @@ class IndonesianQueryClassifier:
 
 
 class TrainingData:
-    """Generate training data examples."""
+    """Training data examples."""
 
     @staticmethod
     def generate_sample_data():
@@ -278,7 +278,7 @@ class TrainingData:
 
 
 def main():
-    """Main function for testing"""
+    """Simple CLI test."""
     classifier = IndonesianQueryClassifier()
 
     # Test queries

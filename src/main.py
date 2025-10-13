@@ -1,11 +1,8 @@
-"""FastAPI server for Indonesian Query Classification."""
+"""FastAPI server for Indonesian query classification."""
 
 import os
-# Enforce offline mode by default for Hugging Face/Transformers to avoid any network calls.
-# These can be overridden via environment if needed.
 os.environ.setdefault("HF_HUB_OFFLINE", "1")
 os.environ.setdefault("TRANSFORMERS_OFFLINE", "1")
-# Optional local cache directory (kept relative to project root by default)
 os.environ.setdefault("HF_HOME", os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".hf_cache")))
 
 from fastapi import FastAPI, HTTPException  # type: ignore
@@ -37,7 +34,6 @@ class QueryRequest(BaseModel):
     user_id: Optional[str] = None
 
 class QueryResponse(BaseModel):
-    # query_id: int
     operation: str
     confidence: float
     query: str
@@ -61,7 +57,6 @@ class StatisticsResponse(BaseModel):
     average_confidence: float
     verified_training_samples: int
     model_needs_retraining: bool
-    # Silence "model_" protected namespace warning from Pydantic for field names.
     model_config = {"protected_namespaces": ()}
 
 @app.get("/health", response_model=HealthResponse)
@@ -74,23 +69,14 @@ async def health_check():
 
 @app.post("/classify", response_model=QueryResponse)
 async def classify_query(request: QueryRequest):
-    """Classify Indonesian query and generate DataFrame operation."""
+    """Classify query and generate DataFrame operation."""
     try:
         columns = request.columns or ["column1", "column2", "column3"]
         result = classifier.generate_dataframe_query(
             request.query, 
             columns
         )
-        # Uncomment to enable query logging (require sqlite setup, can take up space)
-        # query_id = query_logger.log_query(
-        #     request.query,
-        #     result,
-        #     session_id=request.session_id,  # type: ignore
-        #     user_id=request.user_id  # type: ignore
-        # )
-        
         return QueryResponse(
-            # query_id=query_id,
             operation=result["operation"],
             confidence=result["confidence"],
             query=result["query"],
@@ -127,7 +113,7 @@ async def submit_feedback(feedback_request: FeedbackRequest):
 
 @app.get("/statistics", response_model=StatisticsResponse)
 async def get_statistics():
-    """Get system statistics and model performance metrics"""
+    """Get system statistics and model performance metrics."""
     try:
         stats = query_logger.get_query_statistics()
         needs_retraining = model_trainer.should_retrain(min_new_samples=20)
@@ -147,7 +133,7 @@ async def get_statistics():
 
 @app.get("/operations")
 async def get_supported_operations():
-    """Get list of supported DataFrame operations"""
+    """List supported DataFrame operations."""
     return {
         "supported_operations": list(classifier.query_categories.values()),
         "descriptions": {
@@ -164,7 +150,7 @@ async def get_supported_operations():
 
 @app.get("/examples")
 async def get_example_queries():
-    """Get example Indonesian queries for each operation type"""
+    """Example Indonesian queries for each operation type."""
     return {
         "examples": {
             "MAX": [
